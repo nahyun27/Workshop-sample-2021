@@ -1,5 +1,6 @@
 package page.chungjungsoo.to_dosample
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Build
@@ -11,14 +12,14 @@ import android.text.TextWatcher
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import page.chungjungsoo.to_dosample.todo.Todo
 import page.chungjungsoo.to_dosample.todo.TodoDatabaseHelper
 import page.chungjungsoo.to_dosample.todo.TodoListViewAdapter
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     var dbHandler : TodoDatabaseHelper? = null
@@ -56,7 +57,32 @@ class MainActivity : AppCompatActivity() {
 
             // Get elements from custom dialog layout (add_todo_dialog.xml)
             val titleToAdd = dialogView.findViewById<EditText>(R.id.todoTitle)
-            val desciptionToAdd = dialogView.findViewById<EditText>(R.id.todoDescription)
+            val descriptionToAdd = dialogView.findViewById<EditText>(R.id.todoDescription)
+
+            val dueDate = dialogView.findViewById<EditText>(R.id.todoDate)
+            val checkBox = dialogView.findViewById<CheckBox>(R.id.checkBox)
+
+            val mCalendar : Calendar = Calendar.getInstance()
+            dueDate.setText(mCalendar.get(Calendar.YEAR).toString() + "년 " + (mCalendar.get(Calendar.MONTH)+1).toString()+"월 " + mCalendar.get(Calendar.DAY_OF_MONTH).toString()+"일")
+
+            dueDate.setOnClickListener{
+                val calendar : Calendar = Calendar.getInstance()
+
+                DatePickerDialog(
+                    dialogView.context,
+                    R.style.ShapeAppearanceOverlay_MaterialComponents_MaterialCalendar_Day,
+                    DatePickerDialog.OnDateSetListener { datePicker, year, monthOfYear, dayOfMonth ->
+                        //val currentDate = Calendar.getInstance().apply{set(year, monthOfYear, dayOfMonth)}
+                        dueDate.setText(year.toString()+"년 "+(monthOfYear+1).toString()+"월 " + dayOfMonth +"일")
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+                ).apply {
+                    datePicker.minDate = System.currentTimeMillis()
+                }.show()
+            }
+
 
             // Add InputMethodManager for auto keyboard popup
             val ime = applicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -77,8 +103,9 @@ class MainActivity : AppCompatActivity() {
                         // Add item to the database
                         val todo = Todo(
                             titleToAdd.text.toString(),
-                            desciptionToAdd.text.toString(),
-                            false
+                            descriptionToAdd.text.toString(),
+                            dueDate.text.toString(),
+                            checkBox.isChecked
                         )
                         dbHandler!!.addTodo(todo)
 
@@ -106,6 +133,7 @@ class MainActivity : AppCompatActivity() {
             // and in databases.
             add.isEnabled = false
 
+            
             // Listener for title text. If something is inputted in title, we should re-enable the add button.
             titleToAdd.addTextChangedListener(object: TextWatcher {
                 override fun afterTextChanged(p0: Editable?) {
